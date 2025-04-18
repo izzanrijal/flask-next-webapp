@@ -105,8 +105,8 @@ function QuestionWorkspace({ selectedQuestionId }: QuestionWorkspaceProps) {
   }
 
   return (
-    <div className="w-full md:w-1/4 lg:w-4/12 flex flex-col">
-      <div className="flex-1 bg-white rounded-lg shadow-sm p-4 mb-4 overflow-y-auto">
+    <div className="w-full h-full flex flex-col">
+      <div className="flex-1 bg-white rounded-lg shadow-sm p-6 mb-4 overflow-y-auto max-w-4xl mx-auto min-h-[600px]">
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <LoadingSpinner />

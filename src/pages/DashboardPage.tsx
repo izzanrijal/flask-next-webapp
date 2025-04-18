@@ -20,14 +20,14 @@ function DashboardPage() {
       </header>
 
       <main className="flex-1 flex flex-col md:flex-row max-w-screen-2xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 gap-6">
+        <QuestionWorkspace 
+          selectedQuestionId={selectedQuestionId}
+        />
         <Sidebar 
           selectedSystemId={selectedSystemId}
           setSelectedSystemId={setSelectedSystemId}
           selectedQuestionId={selectedQuestionId}
           setSelectedQuestionId={setSelectedQuestionId}
-        />
-        <QuestionWorkspace 
-          selectedQuestionId={selectedQuestionId}
         />
       </main>
     </div>
