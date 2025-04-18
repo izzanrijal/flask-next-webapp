@@ -34,7 +34,6 @@ function QuestionWorkspace({ selectedQuestionId }: QuestionWorkspaceProps) {
     mutationFn: (question: Question) => generateQuestion(question),
     onSuccess: (data: GeneratedQuestion) => {
       setGeneratedQuestion(data);
-      setIsEditing(true);
     },
     onError: (error: any) => {
       console.error('Error generating question:', error);
@@ -151,71 +150,66 @@ function QuestionWorkspace({ selectedQuestionId }: QuestionWorkspaceProps) {
             ) : (
               <>
                 <QuestionDetails question={question!} />
-                
                 {generatedQuestion && (
                   <div className="mt-6 border-t pt-4">
                     <h3 className="text-lg font-medium text-gray-900 mb-3">
                       Generated Question
                     </h3>
                     <QuestionDetails question={generatedQuestion} isGenerated />
-                  </div>
-                )}
-                
-                <div className="mt-6 grid grid-cols-2 gap-2">
-                  <button
-                    onClick={handleGenerateQuestion}
-                    disabled={isGenerating || generateMutation.isPending}
-                    className="btn-primary col-span-2"
-                  >
-                    {isGenerating || generateMutation.isPending ? (
-                      <>
-                        <RefreshCw className="animate-spin h-4 w-4 mr-2" />
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCw className="h-4 w-4 mr-2" />
-                        Generate New Question
-                      </>
-                    )}
-                  </button>
-                  
-                  {generatedQuestion && (
-                    <>
+                    <div className="flex gap-2 mt-4">
                       <button
-                        onClick={() => setIsEditing(true)}
-                        className="btn-secondary"
-                      >
-                        <Edit className="h-4 w-4 mr-2" />
-                        Edit
-                      </button>
-                      <button
+                        className="btn-primary"
                         onClick={() => handleUpdateQuestion(generatedQuestion)}
                         disabled={updateMutation.isPending}
-                        className="btn-primary"
                       >
                         <Check className="h-4 w-4 mr-2" />
                         Approve
                       </button>
                       <button
-                        onClick={() => setGeneratedQuestion(null)}
-                        className="btn-danger"
+                        className="btn-secondary"
+                        onClick={() => setIsEditing(true)}
                       >
-                        <X className="h-4 w-4 mr-2" />
-                        Reject
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit
                       </button>
                       <button
-                        onClick={handleSkip}
                         className="btn-outline"
+                        onClick={() => setGeneratedQuestion(null)}
                       >
-                        <SlidersHorizontal className="h-4 w-4 mr-2" />
-                        Skip & Create Manually
+                        <X className="h-4 w-4 mr-2" />
+                        Cancel
                       </button>
-                    </>
-                  )}
-                </div>
+                    </div>
+                  </div>
+                )}
               </>
             )}
+            <div className="mt-6 grid grid-cols-2 gap-2">
+              <button
+                onClick={handleGenerateQuestion}
+                disabled={isGenerating || generateMutation.isPending}
+                className="btn-primary col-span-2"
+              >
+                {isGenerating || generateMutation.isPending ? (
+                  <>
+                    <RefreshCw className="animate-spin h-4 w-4 mr-2" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Generate New Question
+                  </>
+                )}
+              </button>
+              <button
+                onClick={handleSkip}
+                className="btn-outline"
+              >
+                <SlidersHorizontal className="h-4 w-4 mr-2" />
+                Skip & Create Manually
+              </button>
+            </div>
           </>
         )}
       </div>
