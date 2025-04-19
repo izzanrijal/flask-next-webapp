@@ -14,6 +14,7 @@ export interface Question {
   discussion: string;
   learning_objective: string;
   already_updated?: boolean;
+  is_accepted: boolean;
 }
 
 export interface GeneratedQuestion {
@@ -27,6 +28,7 @@ export interface GeneratedQuestion {
   correct_answer: string;
   discussion: string;
   learning_objective: string;
+  is_accepted: boolean;
 }
 
 export interface System {

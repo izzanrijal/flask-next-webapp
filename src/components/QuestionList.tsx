@@ -1,8 +1,9 @@
-import { CheckCircle, XCircle } from 'lucide-react';
+import { CheckSquare, Square, FileCheck2, FileText } from 'lucide-react';
 
 interface Question {
   id: number;
   already_updated: boolean;
+  is_accepted: boolean;
 }
 
 interface QuestionListProps {
@@ -29,17 +30,20 @@ function QuestionList({
             }`}
           >
             <span className="text-sm font-medium">Question #{question.id}</span>
-            {question.already_updated ? (
-              <span className="flex items-center text-green-600 text-xs">
-                <CheckCircle size={16} className="mr-1" />
-                Updated
-              </span>
-            ) : (
-              <span className="flex items-center text-red-600 text-xs">
-                <XCircle size={16} className="mr-1" />
-                Pending
-              </span>
-            )}
+            <span className="flex items-center gap-2">
+              {/* Accepted icon: CheckSquare if accepted, Square if not */}
+              {question.is_accepted ? (
+                <CheckSquare size={18} className="text-green-600" />
+              ) : (
+                <Square size={18} className="text-gray-300" />
+              )}
+              {/* Updated icon: FileCheck2 if updated, FileText if not */}
+              {question.already_updated ? (
+                <FileCheck2 size={18} className="text-blue-600" />
+              ) : (
+                <FileText size={18} className="text-gray-300" />
+              )}
+            </span>
           </button>
         </li>
       ))}

@@ -50,6 +50,15 @@ export async function updateQuestion({ id, question }: { id: number, question: G
   await axios.patch(`${API_URL}/questions/${id}`, question);
 }
 
+export async function updateIsAccepted(id: number, is_accepted: boolean): Promise<void> {
+  await axios.patch(`${API_URL}/questions/${id}/accept`, { is_accepted });
+}
+
+export async function fetchQuestionBefore(id: number): Promise<Question> {
+  const response = await axios.get(`${API_URL}/questions/${id}/before`);
+  return response.data;
+}
+
 export async function fetchProgressStats(): Promise<{ updatedCount: number; totalCount: number }> {
   const response = await axios.get(`${API_URL}/progress`);
   return response.data;

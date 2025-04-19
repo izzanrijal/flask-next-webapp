@@ -89,7 +89,7 @@ def get_questions():
         connection = get_connection()
         cursor = connection.cursor()
         query = '''
-            SELECT q.id, q.already_updated
+            SELECT q.id, q.already_updated, COALESCE(q.is_accepted, 0) AS is_accepted
             FROM questions_duplicated q
             JOIN subtopic_lists s ON q.subtopic_list_id = s.id
             JOIN topic_lists t ON s.topic_id = t.id
@@ -99,6 +99,8 @@ def get_questions():
         '''
         cursor.execute(query, (system_id, limit, offset))
         questions = cursor.fetchall()
+        for q in questions:
+            q['is_accepted'] = bool(q.get('is_accepted', 0))
         cursor.close()
         connection.close()
         return jsonify(questions)
@@ -111,12 +113,15 @@ def get_question(id):
         connection = get_connection()
         cursor = connection.cursor()
         cursor.execute('''
-            SELECT q.*, s.subtopic AS subtopic_list
+            SELECT q.*, s.subtopic AS subtopic_list,
+                   COALESCE(q.is_accepted, 0) AS is_accepted
             FROM questions_duplicated q
             LEFT JOIN subtopic_lists s ON q.subtopic_list_id = s.id
             WHERE q.id = %s
         ''', (id,))
         question = cursor.fetchone()
+        if question and 'is_accepted' in question:
+            question['is_accepted'] = bool(question['is_accepted'])
         cursor.close()
         connection.close()
         if not question:
@@ -213,6 +218,38 @@ Gunakan Bahasa Indonesia akademik yang jelas, logis, dan mengalir klinis.
             return jsonify({'error': 'Unknown Grok response structure', 'raw': result}), 500
         except Exception as err:
             return jsonify({'error': 'Failed to parse Grok content', 'message': str(err), 'raw': result}), 500
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/questions/<int:id>/accept', methods=['PATCH'])
+def update_is_accepted(id):
+    try:
+        data = request.get_json()
+        is_accepted = data.get('is_accepted')
+        if is_accepted is None:
+            return jsonify({'error': 'Missing is_accepted value'}), 400
+        connection = get_connection()
+        cursor = connection.cursor()
+        cursor.execute('UPDATE questions_duplicated SET is_accepted = %s WHERE id = %s', (is_accepted, id))
+        connection.commit()
+        cursor.close()
+        connection.close()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/questions/<int:id>/before', methods=['GET'])
+def get_question_before(id):
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
+        cursor.execute('SELECT * FROM questions_duplicated_copy WHERE id = %s', (id,))
+        question = cursor.fetchone()
+        cursor.close()
+        connection.close()
+        if not question:
+            return jsonify({'error': 'Question not found in copy table', 'message': f'No question found with ID {id}'}), 404
+        return jsonify(question)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

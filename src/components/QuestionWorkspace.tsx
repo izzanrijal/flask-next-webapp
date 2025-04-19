@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchQuestionById, generateQuestion, updateQuestion } from '../api/questions';
+import { fetchQuestionById, generateQuestion, updateQuestion, updateIsAccepted, fetchQuestionBefore } from '../api/questions';
 import LoadingSpinner from './LoadingSpinner';
 import ProgressDashboard from './ProgressDashboard';
 import QuestionDetails from './QuestionDetails';
 import QuestionForm from './QuestionForm';
 import SuccessModal from './SuccessModal';
-import { ArrowLeft, ArrowRight, RefreshCw, Edit, Check, X, SlidersHorizontal } from 'lucide-react';
+import { ArrowLeft, ArrowRight, RefreshCw, Edit, Check, X, SlidersHorizontal, CheckCircle, XCircle } from 'lucide-react';
 import { Question, GeneratedQuestion } from '../types/question';
+import { useEffect } from 'react';
 
 interface QuestionWorkspaceProps {
   selectedQuestionId: number | null;
@@ -19,6 +20,8 @@ function QuestionWorkspace({ selectedQuestionId }: QuestionWorkspaceProps) {
   const [generatedQuestion, setGeneratedQuestion] = useState<GeneratedQuestion | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [beforeQuestion, setBeforeQuestion] = useState<Question | null>(null);
+  const [acceptLoading, setAcceptLoading] = useState(false);
 
   const {
     data: question,
@@ -29,6 +32,14 @@ function QuestionWorkspace({ selectedQuestionId }: QuestionWorkspaceProps) {
     queryFn: () => fetchQuestionById(selectedQuestionId!),
     enabled: selectedQuestionId !== null
   });
+
+  useEffect(() => {
+    if (selectedQuestionId) {
+      fetchQuestionBefore(selectedQuestionId)
+        .then(setBeforeQuestion)
+        .catch(() => setBeforeQuestion(null));
+    }
+  }, [selectedQuestionId]);
 
   const generateMutation = useMutation({
     mutationFn: (question: Question) => generateQuestion(question),
@@ -54,6 +65,18 @@ function QuestionWorkspace({ selectedQuestionId }: QuestionWorkspaceProps) {
     },
     onError: (error: any) => {
       alert(error?.response?.data?.message || error?.response?.data?.error || 'Failed to save changes');
+    }
+  });
+
+  const acceptMutation = useMutation({
+    mutationFn: (is_accepted: boolean) => {
+      if (!selectedQuestionId) return Promise.resolve();
+      setAcceptLoading(true);
+      return updateIsAccepted(selectedQuestionId, is_accepted).finally(() => setAcceptLoading(false));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['question', selectedQuestionId] });
+      queryClient.invalidateQueries({ queryKey: ['questions'] });
     }
   });
 
@@ -89,7 +112,8 @@ function QuestionWorkspace({ selectedQuestionId }: QuestionWorkspaceProps) {
       option_e: '',
       correct_answer: '',
       discussion: '',
-      learning_objective: ''
+      learning_objective: '',
+      is_accepted: false
     });
   };
 
@@ -121,7 +145,7 @@ function QuestionWorkspace({ selectedQuestionId }: QuestionWorkspaceProps) {
               <h2 className="text-xl font-medium text-gray-900">
                 Question #{selectedQuestionId}
               </h2>
-              <div className="flex space-x-2">
+              <div className="flex space-x-2 items-center">
                 <button
                   className="btn-outline p-2"
                   title="Previous Question"
@@ -136,6 +160,54 @@ function QuestionWorkspace({ selectedQuestionId }: QuestionWorkspaceProps) {
                 </button>
               </div>
             </div>
+
+            {/* Status Preview Accepted & Updated */}
+            {question && (
+              <div className="mb-2 flex items-center gap-4">
+                {/* Accepted Indicator */}
+                {question.is_accepted ? (
+                  <span className="flex items-center text-green-600 text-xs font-semibold">
+                    <CheckCircle size={16} className="mr-1" />
+                    Accepted
+                  </span>
+                ) : (
+                  <span className="flex items-center text-red-600 text-xs font-semibold">
+                    <XCircle size={16} className="mr-1" />
+                    Not Accepted
+                  </span>
+                )}
+                {/* Updated Indicator */}
+                {question.already_updated ? (
+                  <span className="flex items-center text-blue-600 text-xs font-semibold">
+                    <CheckCircle size={16} className="mr-1" />
+                    Updated
+                  </span>
+                ) : (
+                  <span className="flex items-center text-gray-400 text-xs font-semibold">
+                    <XCircle size={16} className="mr-1" />
+                    Not Updated
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Toggle Slider Accept Below Navigation */}
+            {question && (
+              <div className="mb-4 flex items-center gap-4">
+                <span className="text-xs font-semibold text-gray-700">Accepted</span>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={!!question.is_accepted}
+                    disabled={acceptLoading}
+                    onChange={e => acceptMutation.mutate(e.target.checked)}
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:bg-blue-600 transition-all"></div>
+                  <div className="absolute left-1 top-1 bg-white w-4 h-4 rounded-full shadow-md transition-transform peer-checked:translate-x-5"></div>
+                </label>
+              </div>
+            )}
 
             {/* Subtopic List Display */}
             {question?.subtopic_list && (
@@ -219,6 +291,16 @@ function QuestionWorkspace({ selectedQuestionId }: QuestionWorkspaceProps) {
                 Skip & Create Manually
               </button>
             </div>
+
+            {/* Preview Before (Original) */}
+            {beforeQuestion && (
+              <div className="mt-6">
+                <h3 className="text-lg font-bold text-gray-800 mb-2">Original Question (Before Generation)</h3>
+                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                  <QuestionDetails question={beforeQuestion} />
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>
