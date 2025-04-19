@@ -150,19 +150,20 @@ Berikut ini adalah soal klinis tingkat UKMPPD yang telah ada, dalam format JSON 
 
 {original}
 
-Tugas Anda:
-1. **Identifikasi topik klinis atau diagnosis utama yang sedang diuji** **serta _jenis konsep_ yang ditanyakan** (mis. patofisiologi, diagnosis, tatalaksana, interpretasi EKG, radiologi, dll.) berdasarkan jawaban yang benar.
-2. **Buat soal baru yang menguji topik _ DAN _ jenis konsep yang sama**, namun dengan skenario klinis yang **sepenuhnya berbeda** (bukan parafrase, bukan pengulangan pola).
+Tugas Anda:
+1. **Identifikasi topik klinis atau diagnosis utama yang sedang diuji** **serta _jenis konsep_ yang ditanyakan** (mis. patofisiologi, diagnosis, tatalaksana, interpretasi EKG, radiologi, dll.) berdasarkan jawaban yang benar.
+2. **Buat soal baru yang menguji topik _DAN_ jenis konsep yang sama**, namun dengan skenario klinis yang **sepenuhnya berbeda** (bukan parafrase, bukan pengulangan pola).
 3. Skenario boleh berupa anamnesis, pemeriksaan fisik, EKG, hasil lab, radiologi, atau gabungan data klinis lainnya.
-4. Jika jenis konsep yang di­identi­fikasi **bukan “diagnosis”**, maka fokus soal dan opsi jawaban harus tetap pada konsep tersebut (contoh: mekanisme patofisiologi, pilihan obat, interpretasi grafis, dsb.).  
+4. Jika pada soal asli terdapat gambar (misal: EKG, radiologi, foto lesi, grafik, dsb.) namun gambar tidak diberikan, gunakan clue dari soal/jawaban untuk menebak jenis gambar tersebut. Buat soal baru yang juga menggunakan gambar serupa (misal: deskripsikan hasil EKG, radiologi, dsb.) dan pastikan soal baru tetap relevan dengan konteks gambar tersebut. Tidak perlu menjelaskan proses penebakan gambar pada output—cukup hasil akhirnya saja.
+5. Jika jenis konsep yang diidentifikasi **bukan “diagnosis”**, maka fokus soal dan opsi jawaban harus tetap pada konsep tersebut (contoh: mekanisme patofisiologi, pilihan obat, interpretasi grafis, dsb.).  
    Jika memang “diagnosis”, barulah fokus soal pada penegakan diagnosis.
-5. Buat lima pilihan jawaban (A–E) dengan tepat satu yang benar; pastikan semua opsi kredibel secara medis.
-6. Buat **pembahasan komprehensif**, menjelaskan:  
+6. Buat lima pilihan jawaban (A–E) dengan tepat satu yang benar; pastikan semua opsi kredibel secara medis.
+7. Buat **pembahasan komprehensif**, menjelaskan:  
    - Mengapa jawaban benar paling tepat.  
    - Mengapa masing‑masing opsi lain salah, dikaitkan dengan data klinis.
-7. **Tentukan “learning_objective”**—konsep inti yang harus dikuasai calon dokter untuk menjawab soal tersebut (≤ 40 kata; ringkas, langsung ke inti; tidak perlu mengungkap detail skenario klinis).
+8. **Tentukan “learning_objective”**—konsep inti yang harus dikuasai calon dokter untuk menjawab soal tersebut (≤ 40 kata; ringkas, langsung ke inti; tidak perlu mengungkap detail skenario klinis).
 
-Outputkan **hanya satu blok JSON** dengan struktur:
+Outputkan **hanya satu blok JSON** dengan struktur:
 {{
   "scenario": "",
   "question": "",

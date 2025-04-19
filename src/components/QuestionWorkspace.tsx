@@ -204,6 +204,31 @@ function QuestionWorkspace({ selectedQuestionId }: QuestionWorkspaceProps) {
                     Not Updated
                   </span>
                 )}
+                {/* Edit Button */}
+                {(!isEditing && question) && (
+                  <button
+                    className="btn-outline p-2"
+                    title="Edit Question"
+                    onClick={() => {
+                      setIsEditing(true);
+                      setGeneratedQuestion({
+                        scenario: question.scenario,
+                        question: question.question,
+                        option_a: question.option_a,
+                        option_b: question.option_b,
+                        option_c: question.option_c,
+                        option_d: question.option_d,
+                        option_e: question.option_e,
+                        correct_answer: question.correct_answer,
+                        discussion: question.discussion,
+                        learning_objective: question.learning_objective,
+                        is_accepted: question.is_accepted,
+                      });
+                    }}
+                  >
+                    <Edit size={16} />
+                  </button>
+                )}
               </div>
             )}
 
@@ -233,17 +258,16 @@ function QuestionWorkspace({ selectedQuestionId }: QuestionWorkspaceProps) {
               </div>
             )}
 
-            {isEditing ? (
-              <QuestionForm 
-                initialData={generatedQuestion || question!}
+            {(isEditing && generatedQuestion) && (
+              <QuestionForm
+                initialData={generatedQuestion}
                 onSubmit={handleUpdateQuestion}
-                onCancel={() => {
-                  setIsEditing(false);
-                  setGeneratedQuestion(null);
-                }}
+                onCancel={() => setIsEditing(false)}
                 isSubmitting={updateMutation.isPending}
               />
-            ) : (
+            )}
+
+            {!isEditing && (
               <>
                 <QuestionDetails question={question!} />
                 {generatedQuestion && (
