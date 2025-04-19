@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchQuestionById, generateQuestion, updateQuestion, updateIsAccepted, fetchQuestionBefore } from '../api/questions';
+import { fetchQuestionById, generateQuestion, updateQuestion, updateIsAccepted, fetchQuestionBefore, updateDiscussion } from '../api/questions';
 import LoadingSpinner from './LoadingSpinner';
 import ProgressDashboard from './ProgressDashboard';
 import QuestionDetails from './QuestionDetails';
@@ -304,11 +304,11 @@ function QuestionWorkspace({ selectedQuestionId }: QuestionWorkspaceProps) {
                 )}
               </>
             )}
-            <div className="mt-6 grid grid-cols-2 gap-2">
+            <div className="mt-6 flex flex-col gap-2 w-full">
               <button
                 onClick={handleGenerateQuestion}
                 disabled={isGenerating || generateMutation.isPending}
-                className="btn-primary col-span-2"
+                className="btn-primary w-full"
               >
                 {isGenerating || generateMutation.isPending ? (
                   <>
@@ -322,13 +322,40 @@ function QuestionWorkspace({ selectedQuestionId }: QuestionWorkspaceProps) {
                   </>
                 )}
               </button>
-              <button
-                onClick={handleSkip}
-                className="btn-outline"
-              >
-                <SlidersHorizontal className="h-4 w-4 mr-2" />
-                Skip & Create Manually
-              </button>
+              <div className="grid grid-cols-2 gap-2 w-full">
+                <button
+                  className="btn-outline w-full flex items-center justify-center"
+                  title="Update Discussion (Grok AI)"
+                  disabled={isGenerating}
+                  onClick={async () => {
+                    if (!question) return;
+                    setIsGenerating(true);
+                    try {
+                      const newDiscussion = await updateDiscussion(question.id);
+                      queryClient.setQueryData(['question', selectedQuestionId], {
+                        ...question,
+                        discussion: newDiscussion,
+                        already_updated: true
+                      });
+                      queryClient.invalidateQueries({ queryKey: ['questions'] });
+                    } catch (err) {
+                      alert('Failed to update discussion.');
+                    } finally {
+                      setIsGenerating(false);
+                    }
+                  }}
+                >
+                  <RefreshCw size={16} className={isGenerating ? 'animate-spin mr-2' : 'mr-2'} />
+                  Update Discussion
+                </button>
+                <button
+                  onClick={handleSkip}
+                  className="btn-outline w-full"
+                >
+                  <SlidersHorizontal className="h-4 w-4 mr-2" />
+                  Skip & Create Manually
+                </button>
+              </div>
             </div>
 
             {/* Preview Before (Original) */}

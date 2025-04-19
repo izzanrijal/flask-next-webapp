@@ -301,6 +301,96 @@ def update_question(id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/questions/<int:id>/update-discussion', methods=['POST'])
+def update_question_discussion(id):
+    """
+    Update only the discussion field of a question using Grok API and current database content.
+    """
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
+        cursor.execute('SELECT * FROM questions_duplicated WHERE id = %s', (id,))
+        question = cursor.fetchone()
+        if not question:
+            cursor.close()
+            connection.close()
+            return jsonify({'error': 'Question not found'}), 404
+        # Compose prompt
+        scenario = question['scenario']
+        question_text = question['question']
+        choices = f"A. {question['option_a']}\nB. {question['option_b']}\nC. {question['option_c']}\nD. {question['option_d']}\nE. {question['option_e']}"
+        option_key = f"option_{question['correct_answer'].lower()}"
+        correct_answer = f"{question['correct_answer']}. {question[option_key]}"
+        prompt = (
+            "Buat pembahasan yang jelas dan ringkas untuk soal berikut berdasarkan data berikut:\n\n"
+            f"Scenario:\n{scenario}\n\n"
+            f"Question:\n{question_text}\n\n"
+            f"Pilihan Jawaban:\n{choices}\n\n"
+            f"Jawaban yang benar:\n{correct_answer}\n\n"
+            "Instruksi:\n"
+            f"- Jelaskan alasan kenapa jawaban yang benar adalah {correct_answer}.\n"
+            "- Bandingkan secara singkat dengan pilihan jawaban lain jika relevan.\n"
+            "- Gunakan bahasa Indonesia yang mudah dipahami.\n"
+            "- Jangan mengulang soal atau pilihan jawaban secara utuh di pembahasan, cukup fokus pada penjelasan konsep dan logika di balik jawabannya.\n"
+            "- Maksimal 2000 token.\n\n"
+            "Output dalam format markdown JSON seperti berikut:\n````json\n{\n  \"discussion\": \"<isi pembahasan di sini>\"\n}\n````\nHanya berikan output JSON di atas, tanpa tambahan apapun."
+        )
+        # Call Grok API (replace with actual endpoint and key)
+        api_key = os.getenv('GROK_API_KEY')
+        headers = {'Authorization': f'Bearer {api_key}'}
+        payload = {
+            'model': 'grok-3',
+            'messages': [
+                {
+                    'role': 'system',
+                    'content': 'You are an expert medical question generator for a clinical education app. Your job is to create new, high-quality clinical case questions (with scenario, options, correct answer, discussion, and learning objective) for Indonesian medical students, following strict academic and clinical standards.'
+                },
+                {
+                    'role': 'user',
+                    'content': prompt
+                }
+            ],
+            'max_tokens': 4000,
+            'temperature': 0.9,
+            'stream': False
+        }
+        response = requests.post('https://api.x.ai/v1/chat/completions', json=payload, headers=headers)
+        if response.status_code != 200:
+            cursor.close()
+            connection.close()
+            return jsonify({'error': 'Grok API error', 'message': response.text}), 500
+        result = response.json()
+        # Flexible extraction: handle both direct object and content-in-message
+        try:
+            # Case 1: result is already the desired dict
+            if all(k in result for k in ["scenario","question","option_a","option_b","option_c","option_d","option_e","correct_answer","discussion","learning_objective"]):
+                discussion = result['discussion']
+            # Case 2: OpenAI-style response with choices/message/content
+            elif "choices" in result and result["choices"]:
+                content = result["choices"][0]["message"]["content"]
+                import json as pyjson
+                parsed = pyjson.loads(content)
+                discussion = parsed['discussion']
+            # Case 3: result is already wrapped in 'result' key
+            elif "result" in result and isinstance(result["result"], dict):
+                discussion = result["result"].get('discussion', '')
+            else:
+                cursor.close()
+                connection.close()
+                return jsonify({'error': 'Unknown Grok response structure', 'raw': result}), 500
+        except Exception as err:
+            cursor.close()
+            connection.close()
+            return jsonify({'error': 'Failed to parse Grok content', 'message': str(err), 'raw': result}), 500
+        # Update only discussion field
+        cursor.execute('UPDATE questions_duplicated SET discussion=%s, already_updated=1 WHERE id=%s', (discussion, id))
+        connection.commit()
+        cursor.close()
+        connection.close()
+        return jsonify({'success': True, 'discussion': discussion})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/progress', methods=['GET'])
 def get_progress():
     try:

@@ -63,3 +63,9 @@ export async function fetchProgressStats(): Promise<{ updatedCount: number; tota
   const response = await axios.get(`${API_URL}/progress`);
   return response.data;
 }
+
+export async function updateDiscussion(id: number): Promise<string> {
+  const response = await axios.post(`${API_URL}/questions/${id}/update-discussion`);
+  // result: { success: true, discussion: string }
+  return response.data.discussion;
+}
