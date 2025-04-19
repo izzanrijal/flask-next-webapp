@@ -137,6 +137,15 @@ function QuestionWorkspace({ selectedQuestionId }: QuestionWorkspaceProps) {
               </div>
             </div>
 
+            {/* Subtopic List Display */}
+            {question?.subtopic_list && (
+              <div className="mb-2">
+                <span className="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full">
+                  {question.subtopic_list}
+                </span>
+              </div>
+            )}
+
             {isEditing ? (
               <QuestionForm 
                 initialData={generatedQuestion || question!}

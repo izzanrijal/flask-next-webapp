@@ -110,7 +110,12 @@ def get_question(id):
     try:
         connection = get_connection()
         cursor = connection.cursor()
-        cursor.execute('SELECT * FROM questions_duplicated WHERE id = %s', (id,))
+        cursor.execute('''
+            SELECT q.*, s.subtopic AS subtopic_list
+            FROM questions_duplicated q
+            LEFT JOIN subtopic_lists s ON q.subtopic_list_id = s.id
+            WHERE q.id = %s
+        ''', (id,))
         question = cursor.fetchone()
         cursor.close()
         connection.close()
@@ -140,18 +145,19 @@ Berikut ini adalah soal klinis tingkat UKMPPD yang telah ada, dalam format JSON 
 
 {original}
 
-Tugas Anda:
-1. Identifikasi topik klinis atau diagnosis utama yang sedang diuji dari soal tersebut (berdasarkan jawaban yang benar).
-2. Buat soal baru yang menguji diagnosis yang sama, namun dengan skenario klinis yang **sepenuhnya berbeda** (bukan parafrase, bukan pengulangan pola).
-3. Skenario boleh berdasarkan anamnesis, pemeriksaan fisik, EKG, hasil lab, radiologi, atau gabungan data klinis lainnya.
-4. Fokus soal tetap pada **penegakan diagnosis**, dan peserta harus dituntun untuk bernalar klinis untuk sampai ke diagnosis tersebut.
-5. Buat lima pilihan jawaban (A–E), hanya satu yang benar, dan pastikan semua opsi terlihat kredibel secara medis.
-6. Buat **pembahasan komprehensif**, menjelaskan:
-    - Kenapa satu jawaban paling tepat,
-    - Kenapa opsi lain salah, berdasarkan ilmu dan data klinis.
-7. **Tentukan "learning_objective"** untuk soal tersebut, yang merupakan konsep inti atau tujuan pembelajaran yang diuji dalam soal ini. "Learning_objective" ini harus mencakup hal-hal seperti teori dasar, diagnosis utama, tanda klinis relevan, dan pendekatan pengobatan yang diperlukan untuk menjawab dengan benar. Fokus utama adalah pada apa yang perlu dipahami oleh calon dokter agar dapat menjawab soal dengan tepat, tanpa perlu mengungkapkan rincian soal atau skenario klinis secara keseluruhan. Buatlah dalam format yang ringkas dan langsung ke inti, yang mudah untuk dianalisis oleh AI.
+Tugas Anda:
+1. **Identifikasi topik klinis atau diagnosis utama yang sedang diuji** **serta _jenis konsep_ yang ditanyakan** (mis. patofisiologi, diagnosis, tatalaksana, interpretasi EKG, radiologi, dll.) berdasarkan jawaban yang benar.
+2. **Buat soal baru yang menguji topik _ DAN _ jenis konsep yang sama**, namun dengan skenario klinis yang **sepenuhnya berbeda** (bukan parafrase, bukan pengulangan pola).
+3. Skenario boleh berupa anamnesis, pemeriksaan fisik, EKG, hasil lab, radiologi, atau gabungan data klinis lainnya.
+4. Jika jenis konsep yang di­identi­fikasi **bukan “diagnosis”**, maka fokus soal dan opsi jawaban harus tetap pada konsep tersebut (contoh: mekanisme patofisiologi, pilihan obat, interpretasi grafis, dsb.).  
+   Jika memang “diagnosis”, barulah fokus soal pada penegakan diagnosis.
+5. Buat lima pilihan jawaban (A–E) dengan tepat satu yang benar; pastikan semua opsi kredibel secara medis.
+6. Buat **pembahasan komprehensif**, menjelaskan:  
+   - Mengapa jawaban benar paling tepat.  
+   - Mengapa masing‑masing opsi lain salah, dikaitkan dengan data klinis.
+7. **Tentukan “learning_objective”**—konsep inti yang harus dikuasai calon dokter untuk menjawab soal tersebut (≤ 40 kata; ringkas, langsung ke inti; tidak perlu mengungkap detail skenario klinis).
 
-**Format output HARUS dalam bentuk JSON**, dengan struktur berikut:
+Outputkan **hanya satu blok JSON** dengan struktur:
 {{
   "scenario": "",
   "question": "",

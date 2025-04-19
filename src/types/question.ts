@@ -1,6 +1,7 @@
 export interface Question {
   id?: number;
   subtopic_list_id?: number;
+  subtopic_list?: string;
   scenario: string;
   image_url?: string;
   question: string;
