@@ -69,11 +69,7 @@ function QuestionWorkspace({ selectedQuestionId }: QuestionWorkspaceProps) {
   });
 
   const acceptMutation = useMutation({
-    mutationFn: (is_accepted: boolean) => {
-      if (!selectedQuestionId) return Promise.resolve();
-      setAcceptLoading(true);
-      return updateIsAccepted(selectedQuestionId, is_accepted).finally(() => setAcceptLoading(false));
-    },
+    mutationFn: ({ id, is_accepted }: { id: number, is_accepted: boolean }) => updateIsAccepted(id, is_accepted),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['question', selectedQuestionId] });
       queryClient.invalidateQueries({ queryKey: ['questions'] });
@@ -87,13 +83,33 @@ function QuestionWorkspace({ selectedQuestionId }: QuestionWorkspaceProps) {
     generateMutation.mutate(question);
   };
 
-  const handleUpdateQuestion = (updatedQuestion: GeneratedQuestion) => {
-    if (!selectedQuestionId) return;
-    
-    updateMutation.mutate({
-      id: selectedQuestionId,
-      question: updatedQuestion
+  const handleToggleAccept = () => {
+    if (!question) return;
+    // Optimistically update UI
+    queryClient.setQueryData(['question', selectedQuestionId], {
+      ...question,
+      is_accepted: !question.is_accepted
     });
+    queryClient.setQueryData(['questions'], (old: any) => {
+      if (!old) return old;
+      return old.map((q: any) => q.id === question.id ? { ...q, is_accepted: !q.is_accepted } : q);
+    });
+    acceptMutation.mutate({ id: question.id, is_accepted: !question.is_accepted });
+  };
+
+  const handleUpdateQuestion = (updatedQuestion: GeneratedQuestion) => {
+    if (!question) return;
+    // Optimistically update UI
+    queryClient.setQueryData(['question', selectedQuestionId], {
+      ...question,
+      ...updatedQuestion,
+      already_updated: true
+    });
+    queryClient.setQueryData(['questions'], (old: any) => {
+      if (!old) return old;
+      return old.map((q: any) => q.id === question.id ? { ...q, already_updated: true } : q);
+    });
+    updateMutation.mutate({ id: question.id, question: updatedQuestion });
   };
 
   const handleCloseSuccessModal = () => {
@@ -200,8 +216,7 @@ function QuestionWorkspace({ selectedQuestionId }: QuestionWorkspaceProps) {
                     type="checkbox"
                     className="sr-only peer"
                     checked={!!question.is_accepted}
-                    disabled={acceptLoading}
-                    onChange={e => acceptMutation.mutate(e.target.checked)}
+                    onChange={handleToggleAccept}
                   />
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:bg-blue-600 transition-all"></div>
                   <div className="absolute left-1 top-1 bg-white w-4 h-4 rounded-full shadow-md transition-transform peer-checked:translate-x-5"></div>
