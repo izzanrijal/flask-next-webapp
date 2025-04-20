@@ -165,12 +165,26 @@ function QuestionWorkspace({ selectedQuestionId }: QuestionWorkspaceProps) {
                 <button
                   className="btn-outline p-2"
                   title="Previous Question"
+                  onClick={() => {
+                    if (beforeQuestion && beforeQuestion.id) {
+                      setGeneratedQuestion(null);
+                      setIsEditing(false);
+                      setShowSuccessModal(false);
+                      window.dispatchEvent(new CustomEvent('selectQuestion', { detail: beforeQuestion.id }));
+                    }
+                  }}
+                  disabled={!beforeQuestion || !beforeQuestion.id}
                 >
                   <ArrowLeft size={16} />
                 </button>
                 <button
                   className="btn-outline p-2"
                   title="Next Question"
+                  onClick={() => {
+                    if (question && question.id && typeof question.id === 'number') {
+                      window.dispatchEvent(new CustomEvent('selectQuestion', { detail: question.id + 1 }));
+                    }
+                  }}
                 >
                   <ArrowRight size={16} />
                 </button>

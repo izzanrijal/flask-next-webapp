@@ -244,12 +244,13 @@ def get_question_before(id):
     try:
         connection = get_connection()
         cursor = connection.cursor()
-        cursor.execute('SELECT * FROM questions_duplicated_copy WHERE id = %s', (id,))
+        # Find the previous question by id
+        cursor.execute('SELECT * FROM questions_duplicated_copy WHERE id < %s ORDER BY id DESC LIMIT 1', (id,))
         question = cursor.fetchone()
         cursor.close()
         connection.close()
         if not question:
-            return jsonify({'error': 'Question not found in copy table', 'message': f'No question found with ID {id}'}), 404
+            return jsonify({'error': 'No previous question', 'message': f'No previous question before ID {id}'}), 404
         return jsonify(question)
     except Exception as e:
         return jsonify({'error': str(e)}), 500

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import QuestionWorkspace from '../components/QuestionWorkspace';
 import Sidebar from '../components/Sidebar';
@@ -7,6 +7,15 @@ function DashboardPage() {
   const { logout } = useAuth();
   const [selectedSystemId, setSelectedSystemId] = useState<number | null>(null);
   const [selectedQuestionId, setSelectedQuestionId] = useState<number | null>(null);
+
+  // Listen for custom selectQuestion event to support navigation from QuestionWorkspace
+  useEffect(() => {
+    const handler = (e: CustomEvent) => {
+      setSelectedQuestionId(e.detail);
+    };
+    window.addEventListener('selectQuestion', handler as EventListener);
+    return () => window.removeEventListener('selectQuestion', handler as EventListener);
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
